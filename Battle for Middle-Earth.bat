@@ -2,6 +2,8 @@
 SETLOCAL
 
 CALL :MAIN
+pause
+exit
 
 @REM MAIN
 :Main
@@ -10,10 +12,20 @@ SET BFME2FullName=The Battle for Middle-earth II
 SET BFME25FullName=The Lord of the Rings, The Rise of the Witch-king
 SET BFME25EdainModFullName=Edain Mod for Battle for Middle-earth II: Rise of the Witch King
 
-CALL :CheckRegKey "%BFME1FullName%", "HKLM\SOFTWARE\WOW6432Node\Electronic Arts\EA Games\The Battle for Middle-earth", "InstallPath", BFME1Path
-CALL :CheckRegKey "%BFME2FullName%", "HKLM\SOFTWARE\WOW6432Node\Electronic Arts\Electronic Arts\The Battle for Middle-earth II", "InstallPath", BFME2Path
-CALL :CheckRegKey "%BFME25FullName%", "HKLM\SOFTWARE\WOW6432Node\Electronic Arts\Electronic Arts\The Lord of the Rings, The Rise of the Witch-king", "InstallPath", BFME25Path
-CALL :CheckFilePath "%BFME25EdainModFullName%", "%BFME25Path%", "Edain_Mod_Launcher.exe", BFME25EdainModPath
+SET BFME25EdainModExeName="Edain_Mod_Launcher.exe"
+
+SET BFME1REGPath="HKLM\SOFTWARE\WOW6432Node\Electronic Arts\EA Games\The Battle for Middle-earth"
+SET BFME2REGPath="HKLM\SOFTWARE\WOW6432Node\Electronic Arts\Electronic Arts\The Battle for Middle-earth II"
+SET BFME25REGPath="HKLM\SOFTWARE\WOW6432Node\Electronic Arts\Electronic Arts\The Lord of the Rings, The Rise of the Witch-king"
+
+SET BFME1REGKey="InstallPath"
+SET BFME2REGKey="InstallPath"
+SET BFME25REGKey="InstallPath"
+
+CALL :CheckRegKey %BFME1REGPath%, %BFME1REGKey%, BFME1Path
+CALL :CheckRegKey %BFME2REGPath% , %BFME2REGKey%, BFME2Path
+CALL :CheckRegKey %BFME25REGPath%, %BFME25REGKey%, BFME25Path
+CALL :CheckFilePath "%BFME25Path%", %BFME25EdainModExeName% , BFME25EdainModPath
 
 If defined BFME1Path            ( CALL :EchoGreen "[OK] %BFME1FullName% was found" )          Else ( CALL :EchoRed "[BAD] %BFME1FullName% was not found" )
 If defined BFME2Path            ( CALL :EchoGreen "[OK] %BFME2FullName% was found" )          Else ( CALL :EchoRed "[BAD] %BFME2FullName% was not found" )
@@ -27,28 +39,26 @@ EXIT /B 0
 @REM FUNCTION - Check registry key
 :CheckRegKey
 
-SET HumanReadableName=%~1
-SET RegPath=%~2
-SET RegKey=%~3
-SET "%~4="
+SET RegPath=%~1
+SET RegKey=%~2
+SET "%~3="
 
 @FOR /f "tokens=2*" %%i in ('Reg Query "%RegPath%" /v "%RegKey%" 2^>Nul') do Set "Result=%%j"
-If defined Result ( SET "%~4=%Result:~0,-1%" ) Else ( SET "%~4=" )
+If defined Result ( SET "%~3=%Result:~0,-1%" ) Else ( SET "%~3=" )
 
 EXIT /B 0
 
 @REM FUNCTION - Check file path
 :CheckFilePath
 
-SET HumanReadableName=%~1
-SET FilePath=%~2
-SET FileName=%~3
-SET "EndResult="
+SET FilePath=%~1
+SET FileName=%~2
+SET "%~3="
 
-dir "%FilePath%%FileName%"
-echo "%FilePath%%FileName%"
+SET FullPath=%FilePath%\%FileName%
 
-set %~4=%EndResult%
+if exist "%FullPath%" ( SET "%~3=%FullPath:~0,-1%" ) Else ( SET "%~3=" )
+
 EXIT /B 0
 
 @REM FUNCTION - Echo Green
