@@ -17,8 +17,12 @@ SET BFME1FullName=The Battle for Middle-earth
 SET BFME2FullName=The Battle for Middle-earth II
 SET BFME25FullName=The Lord of the Rings, The Rise of the Witch-king
 SET BFME25EdainModFullName=Edain Mod for Battle for Middle-earth II: Rise of the Witch King
+SET GameRangerFullName=GameRanger
 
 SET BFME25EdainModExeName="Edain_Mod_Launcher.exe"
+SET GameRangerExeName="GameRanger.exe"
+
+SET GameRangerExpectedPath="%appdata%\GameRanger\GameRanger"
 
 SET BFME1REGPath="HKLM\SOFTWARE\WOW6432Node\Electronic Arts\EA Games\The Battle for Middle-earth"
 SET BFME2REGPath="HKLM\SOFTWARE\WOW6432Node\Electronic Arts\Electronic Arts\The Battle for Middle-earth II"
@@ -30,14 +34,20 @@ SET BFME25REGKey="InstallPath"
 
 SET InstallBaseGameExe="%scriptdir%\Launcher\Restarter.exe"
 SET InstallEdainModExe="%scriptdir%\Mods\Battle for Middle-earth II Rise of the Witch King\Edain Mod\EdainInstaller4.7.exe"
+SET InstallEdain4GBPatchExe="%scriptdir%\Mods\Battle for Middle-earth II Rise of the Witch King\Edain Mod\4gb_patch\4gb_patch.exe"
+SET InstallGameRangerExe="%scriptdir%\Mods\GameRangerSetup.exe"
 
 SET "InstallBaseGame="
 SET "InstallEdainMod="
+SET "InstallEdain4GBPatchMod="
+SET "InstallGameRanger="
 
+@REM Update flags if installed or not
 CALL :CheckRegKey %BFME1REGPath%, %BFME1REGKey%, BFME1Path
 CALL :CheckRegKey %BFME2REGPath% , %BFME2REGKey%, BFME2Path
 CALL :CheckRegKey %BFME25REGPath%, %BFME25REGKey%, BFME25Path
 CALL :CheckFilePath "%BFME25Path%", %BFME25EdainModExeName% , BFME25EdainModPath
+CALL :CheckFilePath "%GameRangerExpectedPath%", %GameRangerExeName% , GameRangerPath
 
 If defined BFME1Path ( CALL :EchoGreen "[OK] %BFME1FullName% was found" ) Else ( 
     CALL :EchoRed "[BAD] %BFME1FullName% was not found"
@@ -59,6 +69,13 @@ If defined BFME25EdainModPath   ( CALL :EchoGreen "[OK] %BFME25EdainModFullName%
     SET "InstallEdainMod=true"
 )
 
+If defined GameRangerPath   ( CALL :EchoGreen "[OK] %GameRangerFullName% was found" ) Else (
+    CALL :EchoRed "[BAD] %GameRangerFullName% was not found"
+    SET "InstallGameRanger=true"
+)
+
+
+@REM Install logic
 If defined InstallBaseGame (
     echo Please ensure the latest version of:
     If not defined BFME1Path    ( echo - %BFME1FullName% )
@@ -70,9 +87,16 @@ If defined InstallBaseGame (
     CALL :RunChecksAgain
 ) else (
     if defined InstallEdainMod (
-        echo Please the Edain mod is installed. The installer will run shortly.
+        echo %BFME25EdainModFullName% is not installed. The installer will run shortly.
         CALL %InstallEdainModExe%
+        @REM Sneaky quick installation of 4GB patch
+        copy /b/v/y %InstallEdain4GBPatchExe% "%BFME25Path%" >NUL
+        CALL :RunChecksAgain
+    )
 
+    if defined InstallGameRanger (
+        echo %GameRangerFullName% is not installed. The installer will run shortly.
+        CALL %InstallGameRangerExe%
         CALL :RunChecksAgain
     )
 )
